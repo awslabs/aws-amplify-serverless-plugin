@@ -26,12 +26,12 @@ plugins:
 
 custom:
   amplify:
-    - filename: examples/awsconfiguration.json
+    - filename: ./awsconfiguration.json
       type: native
       appClient: AndroidUserPoolClient
-    - filename: examples/schema.json
+    - filename: ./schema.json
       type: schema.json
-    - filename: examples/aws-exports.js
+    - filename: ./aws-exports.js
       type: javascript
       appClient: WebUserPoolClient
 ```
