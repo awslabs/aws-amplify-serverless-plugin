@@ -16,14 +16,17 @@ provider:
 custom:
   accountId: { Ref: AWS::AccountId }
   amplify:
-    - filename: examples/awsconfiguration.json
-      type: native
-      appClient: AndroidUserPoolClient
-    - filename: examples/schema.json
-      type: schema.json
-    - filename: examples/aws-exports.js
-      type: javascript
-      appClient: WebUserPoolClient
+    defaults:
+      UserPool: UserPool
+    outputs:
+      - filename: examples/awsconfiguration.json
+        type: native
+        appClient: AndroidUserPoolClient
+      - filename: examples/schema.json
+        type: schema.json
+      - filename: examples/aws-exports.js
+        type: javascript
+        appClient: WebUserPoolClient
 
   appSync:
     name: ${self:provider.apiname}
@@ -66,6 +69,14 @@ custom:
 
 resources:
   Resources:
+
+    # Amazon Cognito user pool - used for testing so that we can check the defaults section
+    FirstListedUserPool:
+      Type: "AWS::Cognito::UserPool"
+      Description: "An Amazon Cognito user pool for authenticating users"
+      Properties:
+        UserPoolName: ${self:provider.apiname}-fake-pool
+
     # Amazon Cognito user pool
     UserPool:
       Type: "AWS::Cognito::UserPool"

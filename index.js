@@ -13,7 +13,24 @@ class ServerlessAmplifyPlugin {
         this.hooks = {
             'after:deploy:deploy': this.process.bind(this)
         };
-        this.config = this.serverless.service.custom.amplify;
+
+        // Determine configuration type:
+        //  1) Array (OLD - DEPRECATED)
+        //  2) Object{ output: Array } - NEW and OK
+        const config = this.serverless.service.custom.amplify;
+        if (Array.isArray(config)) {
+            this.config = config;
+            this.defaults = {};
+            this.log('warn', 'Deprecated configuration section - see README.md');
+        } else if (config.hasOwnProperty('outputs') && Array.isArray(config.outputs)) {
+            this.config = config.outputs;
+            this.defaults = (config.hasOwnProperty('defaults')) ? config.defaults : {};
+            this.log('info', 'New configuration section');
+        } else {
+            this.log('verbose', `Config = ${JSON.stringify(config, null, 2)}`);
+            this.log('error', 'Invalid custom.amplify section - see README.md');
+            throw "Invalid custom.amplify configuration section";
+        }
     }
 
     /**
@@ -60,7 +77,7 @@ class ServerlessAmplifyPlugin {
      * @param {String} operation
      * @param {Object} parameters
      */
-    fetch(apiName, operation, parameters) {
+    async fetch(apiName, operation, parameters) {
         this.log('debug', `fetch(${apiName}, ${operation}, ${JSON.stringify(parameters)})`);
         return this.provider.request(apiName, operation, parameters);
     }
@@ -115,9 +132,15 @@ class ServerlessAmplifyPlugin {
         // If we have not fetch the user pool yet, do so now.
         if (!this.cognitoUserPool) {
             const rr = resources.filter(r => r.ResourceType === 'AWS::Cognito::UserPool');
-            this.log('debug', `Processing Amazon Cognito User Pool ${rr[0].LogicalResourceId}`);
+            const userPoolName = this.defaults.hasOwnProperty('UserPool') ? this.defaults.UserPool : rr[0].LogicalResourceId;
+            this.log('debug', `Processing Amazon Cognito User Pool ${userPoolName}`);
+            const userPoolRecord = resources.filter(r => r.LogicalResourceId === userPoolName);
+            if (userPoolRecord.length !== 1) {
+                this.log('error', 'Error processing User Pool: User Pool not found');
+                throw `User Pool ${userPoolName} not found`;
+            }
             let userpool = await this.fetch('CognitoIdentityServiceProvider', 'describeUserPool', {
-                UserPoolId: rr[0].PhysicalResourceId
+                UserPoolId: userPoolRecord.PhysicalResourceId
             });
             this.cognitoUserPool = {
                 'PoolId': userpool.UserPool.Id,
@@ -280,7 +303,9 @@ class ServerlessAmplifyPlugin {
         }
 
         if (configuration.hasOwnProperty('CognitoIdentity')) {
-            if (!authconfig) { config.push(`    "aws_cognito_region": "${configuration.CognitoIdentity.Region}",`); }
+            if (!authconfig) {
+                config.push(`    "aws_cognito_region": "${configuration.CognitoIdentity.Region}",`);
+            }
             config.push(`    "aws_cognito_identity_pool_id": "${configuration.CognitoIdentity.PoolId}",`);
         }
 
@@ -323,6 +348,7 @@ class ServerlessAmplifyPlugin {
      * @param {Configuration} configuration the generated configuration object
      */
     writeConfigurationFiles(configuration) {
+        this.log('verbose', `Writing configuration files: ${JSON.stringify(this.config,null,2)}`);
         this.config.forEach(fileDetails => {
             switch (fileDetails.type.toLowerCase()) {
                 case 'native':

@@ -26,17 +26,27 @@ plugins:
 
 custom:
   amplify:
-    - filename: examples/awsconfiguration.json
-      type: native
-      appClient: AndroidUserPoolClient
-    - filename: examples/schema.json
-      type: schema.json
-    - filename: examples/aws-exports.js
-      type: javascript
-      appClient: WebUserPoolClient
+    default:
+      UserPool: MainUserPool
+      UserFiles: S3UserFiles
+    outputs:
+      - filename: examples/awsconfiguration.json
+        type: native
+        appClient: AndroidUserPoolClient
+      - filename: examples/schema.json
+        type: schema.json
+      - filename: examples/aws-exports.js
+        type: javascript
+        appClient: WebUserPoolClient
 ```
 
-Each entry in the `amplify` section must consist of three parts:
+> For backwards compatibility, the custom.amplify section can also be an array in the same form as the outputs section.  It's considered best practice to use the new format going forward.
+
+The `amplify` section has two parts:
+  * `defaults` contains the named resource records that will be used to generate the files.  Currently, two defaults are supported: `UserPool` for the Amazon Cognito User Pool, and `UserFiles` for the S3 Transfer Utility settings.
+  * `outputs` contains a list of files to generate.
+
+Each entry in the `amplify.outputs` section must consist of three parts:
 
 * `filename` is where you want the file to be stored.  The directory must already exist.
 * `type` is one of the following:
@@ -57,15 +67,16 @@ plugins:
 
 custom:
   amplify:
-    - filename: ../android/app/src/main/res/raw/awsconfiguration.json
-      type: native
-      appClient: AndroidUserPoolClient
-    - filename: ../ios/MyApp/awsconfiguration.json
-      type: native
-      appClient: iOSUserPoolClient
-    - filename: ../web/src/aws-exports.js
-      type: javascript
-      appClient: WebUserPoolClient
+    outputs:
+      - filename: ../android/app/src/main/res/raw/awsconfiguration.json
+        type: native
+        appClient: AndroidUserPoolClient
+      - filename: ../ios/MyApp/awsconfiguration.json
+        type: native
+        appClient: iOSUserPoolClient
+      - filename: ../web/src/aws-exports.js
+        type: javascript
+        appClient: WebUserPoolClient
 ```
 
 To deploy your backend and build all the clients, you might do the following:
@@ -88,7 +99,9 @@ The following resources are supported:
 * AWS AppSync (either via `resources` or the [serverless-appsync-plugin](https://github.com/sid88in/serverless-appsync-plugin)).
 * Amazon Cognito federated identities.
 * Amazon Cognito user pools.
-* S3 buckets for user file storage (only the first listed S3 bucket is handled).
+* S3 buckets for user file storage.
+
+If the user pool or S3 bucket is not listed in the `defaults` section, then the first appropriate resource will be used.
 
 ## Questions, Issues, Feature Requests
 
