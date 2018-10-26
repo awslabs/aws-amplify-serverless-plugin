@@ -112,6 +112,10 @@ class ServerlessAmplifyPlugin {
                     this.log('debug', `Processing ${JSON.stringify(resource)}`);
                     detailedResources.push(resource);   // We have all the details we need for this
                     break;
+                case 'AWS::ApiGateway::RestApi':
+                    this.log('debug', `Processing ${JSON.stringify(resource)}`);
+                    detailedResources.push(resource); // We have all the details we need for this
+                    break;
             }
         }
 
@@ -323,6 +327,15 @@ class ServerlessAmplifyPlugin {
                 config.aws_user_files_s3_bucket = userFiles.PhysicalResourceId;
                 config.aws_user_files_s3_bucket_region = this.provider.getRegion();
             }
+        }
+
+        let apigw = resources.filter(r => r.ResourceType === 'AWS::ApiGateway::RestApi')
+        if (apigw.length > 0) {
+            config.aws_cloud_logic_custom = [{
+                "name": "api",
+                "endpoint": `https://${apigw[0].PhysicalResourceId}.execute-api.${this.provider.getRegion()}.amazonaws.com/${this.provider.getStage()}`,
+                "region": `${this.provider.getRegion()}`
+            }]
         }
 
         let config_body = 'export default '.concat(JSON.stringify(config, null, 2));
