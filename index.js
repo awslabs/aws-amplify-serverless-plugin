@@ -325,7 +325,7 @@ class ServerlessAmplifyPlugin {
             }
         }
 
-        let config_body = 'export default '.concat(JSON.stringify(config_obj, null, 2));
+        let config_body = 'export default '.concat(JSON.stringify(config, null, 2));
 
         this.writeConfigurationFile(fileDetails.filename, [config_header, config_body].join('\n'));
     }
