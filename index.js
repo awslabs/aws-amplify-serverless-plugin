@@ -303,7 +303,7 @@ class ServerlessAmplifyPlugin {
 
         const identityPool = resources.find(r => r.ResourceType === 'AWS::Cognito::IdentityPool');
         if (typeof identityPool !== 'undefined') {
-            if (config.indexOf('"aws_cognito_region"') === -1) {
+            if (!config.aws_cognito_region) {
                 config.aws_cognito_region = identityPool.PhysicalResourceId.split(':')[0];
             }
             config.aws_cognito_identity_pool_id = identityPool.PhysicalResourceId;
