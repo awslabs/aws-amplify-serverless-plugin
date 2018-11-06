@@ -11,7 +11,7 @@ machine:
 defaults: &defaults
   working_directory: ~/app
   docker:
-    - image: cypress/base:10
+    - image: circleci/node:10
       environment:
           ## this enables colors in the output
           TERM: xterm
@@ -54,6 +54,6 @@ workflows:
           filters:
             branches:
               only:
-                - master
+                - release
           requires:
             - build
