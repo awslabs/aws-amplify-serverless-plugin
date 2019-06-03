@@ -581,7 +581,7 @@ class ServerlessAmplifyPlugin {
      */
     writeConfigurationFile(filename, contents) {
         try {
-            fs.writeFileSync(filename, contents, 'utf8')
+            fs.writeFileSync(filename, contents, 'utf8');
         } catch (err) {
             this.log('error', `Writing to ${filename}: ${err}`);
         }
