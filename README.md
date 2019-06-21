@@ -34,7 +34,10 @@ custom:
       type: schema.json
     - filename: examples/aws-exports.js
       type: javascript
-      appClient: WebUserPoolClient
+      appClient:
+        userPoolId: 'exampleUserPoolId'
+        userPoolClientId: 'exampleUserPoolClientId'
+        identityPoolId: 'exampleIdentityPoolId'
       s3bucket: disabled
 ```
 
@@ -48,7 +51,7 @@ Each entry in the `amplify` section must consist of two parts, with two optional
     * `schema.json` (the AWS AppSync schema in JSON format),
     * `graphql` (a sample GraphQL operations file for codegen),
     * `appsync` (generated code for AppSync - the format is based on the extension)
-* `appClient` is the name of the Amazon Cognito user pool app client configured within the `resources` section of the `serverless.yml` file.  It is optional.
+* `appClient` is an optional field. Which can be either the name of the Amazon Cognito user pool app client configured within the `resources` section of the `serverless.yml` file or defining userPoolId, userPoolClientId, identityPoolId and (optional) clientSecret 
 * `s3bucket` is the name of the S3 Bucket used for the S3 transfer utility.  It is optional.  If `disabled`, no S3 bucket information is written to the configuration file.  If not included, the first non-deployed S3 bucket will be used.
 
 For the `appsync` type, the extension of the file is checked.  Supported formats include `flow`, `ts` (for TypeScript), `scala`, and `swift`.
