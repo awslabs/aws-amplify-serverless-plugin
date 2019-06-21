@@ -389,7 +389,7 @@ class ServerlessAmplifyPlugin {
                 config.aws_cognito_region = appClient.userPoolId.split('_')[0];
                 config.aws_user_pools_id = appClient.userPoolId;
                 config.aws_user_pools_web_client_id = appClient.userPoolClientId;
-                config.identityPoolForUserPool = appClient.identityPoolForUserPool;
+                config.aws_cognito_identity_pool_id = appClient.identityPoolForUserPool;
                 if (appClient.hasOwnProperty('clientSecret')) {
                     config.aws_user_pools_web_client_secret = appClient.clientSecret;
                 }
