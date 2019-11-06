@@ -248,7 +248,14 @@ class ServerlessAmplifyPlugin {
         };
 
         if (fileDetails.hasOwnProperty('appClient')) {
-            const appClient = resources.find(r => r.ResourceType === 'AWS::Cognito::UserPoolClient' && r.LogicalResourceId === fileDetails.appClient);
+            // Look for manually defined appClient configuration
+            // when none is available in the resources because
+            // it is defined in a different stack.
+            let appClient = resources.find(
+                r => r.ResourceType === 'AWS::Cognito::UserPoolClient'
+                && r.LogicalResourceId === fileDetails.appClient
+            ) || this.getManuallyDefinedAppClientConfiguration(fileDetails);
+            
             if (typeof appClient !== 'undefined') {
                 config.CognitoUserPool = {
                     Default: {
@@ -362,7 +369,14 @@ class ServerlessAmplifyPlugin {
         config.aws_project_region = this.provider.getRegion();
 
         if (fileDetails.hasOwnProperty('appClient')) {
-            const appClient = resources.find(r => r.ResourceType === 'AWS::Cognito::UserPoolClient' && r.LogicalResourceId === fileDetails.appClient);
+            // Look for manually defined appClient configuration
+            // when none is available in the resources because
+            // it is defined in a different stack.
+            let appClient = resources.find(
+                r => r.ResourceType === 'AWS::Cognito::UserPoolClient'
+                && r.LogicalResourceId === fileDetails.appClient
+            ) || this.getManuallyDefinedAppClientConfiguration(fileDetails);
+            
             if (typeof appClient !== 'undefined') {
                 config.aws_cognito_region = appClient.metadata.UserPoolClient.UserPoolId.split('_')[0];
                 config.aws_user_pools_id = appClient.metadata.UserPoolClient.UserPoolId;
@@ -585,6 +599,32 @@ class ServerlessAmplifyPlugin {
                 this.log('error', `Writing to ${filename}: ${err}`);
             }
         });
+    }
+
+    /**
+     * Checks for and returns a manually defined AppClient cofiguration
+     * 
+     * If the appClient information is defined in a different stack,
+     * we need to be able to define the UserPoolId and ClientId
+     * manually, using available cross stack variable references.
+     * 
+     * @param {FileDetails} fileDetails the file details
+     */
+    getManuallyDefinedAppClientConfiguration(fileDetails) {
+        let appClient;
+
+        try {
+            if (
+                fileDetails.appClient.UserPoolId 
+                && fileDetails.appClient.ClientId
+            ) {
+                appClient = fileDetails.appClient;
+            }
+        } catch (e) {
+            console.log('No manual appClient configuration available.');
+        }
+
+        return appClient;
     }
 }
 
