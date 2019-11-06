@@ -618,7 +618,14 @@ class ServerlessAmplifyPlugin {
                 fileDetails.appClient.UserPoolId 
                 && fileDetails.appClient.ClientId
             ) {
-                appClient = fileDetails.appClient;
+                appClient = {
+                    metadata: {
+                        UserPoolClient: {
+                            UserPoolId: fileDetails.appClient.UserPoolId,
+                            ClientId: fileDetails.appClient.ClientId
+                        }
+                    }
+                };
             }
         } catch (e) {
             console.log('No manual appClient configuration available.');
