@@ -278,7 +278,9 @@ class ServerlessAmplifyPlugin {
                 r.metadata.CognitoIdentityProviders.some(({ClientId}) => ClientId === config.CognitoUserPool.Default.AppClientId)
             )
             : undefined;
-        const identityPool = identityPoolForUserPool || identityPools[0];
+
+        const identityPool = identityPoolForUserPool || identityPools[0] || this.getManuallyDefinedIdentityPoolConfiguration(fileDetails);
+        
         if (typeof identityPool !== 'undefined') {
             config.CredentialsProvider = {
                 CognitoIdentity: {
@@ -396,7 +398,9 @@ class ServerlessAmplifyPlugin {
                 r.metadata.CognitoIdentityProviders.some(({ClientId}) => ClientId === config.aws_user_pools_web_client_id)
             )
             : undefined;
-        const identityPool = identityPoolForUserPool || identityPools[0];
+
+        const identityPool = identityPoolForUserPool || identityPools[0] || this.getManuallyDefinedIdentityPoolConfiguration(fileDetails);
+
         if (typeof identityPool !== 'undefined') {
             if (!config.hasOwnProperty("aws_cognito_region")) {
                 config.aws_cognito_region = identityPool.PhysicalResourceId.split(':')[0];
@@ -602,7 +606,7 @@ class ServerlessAmplifyPlugin {
     }
 
     /**
-     * Checks for and returns a manually defined AppClient cofiguration
+     * Checks for and returns a manually defined AppClient configuration
      * 
      * If the appClient information is defined in a different stack,
      * we need to be able to define the UserPoolId and ClientId
@@ -620,10 +624,7 @@ class ServerlessAmplifyPlugin {
             ) {
                 appClient = {
                     metadata: {
-                        UserPoolClient: {
-                            UserPoolId: fileDetails.appClient.UserPoolId,
-                            ClientId: fileDetails.appClient.ClientId
-                        }
+                        UserPoolClient: fileDetails.appClient
                     }
                 };
             }
@@ -632,6 +633,31 @@ class ServerlessAmplifyPlugin {
         }
 
         return appClient;
+    }
+
+    /**
+     * Checks for and returns a manually defined identityPool configuration
+     * 
+     * If the identityPool information is defined in a different stack,
+     * we need to be able to define the IdentityPoolId manually, 
+     * using available cross stack variable references.
+     * 
+     * @param {FileDetails} fileDetails the file details
+     */
+    getManuallyDefinedIdentityPoolConfiguration(fileDetails) {
+        let identityPool;
+
+        try {
+            if (fileDetails.identityPool) {
+                identityPool = {
+                    PhysicalResourceId: fileDetails.identityPool
+                };
+            }
+        } catch (e) {
+            console.log('No manual identityPool configuration available.');
+        }
+
+        return identityPool;
     }
 }
 
