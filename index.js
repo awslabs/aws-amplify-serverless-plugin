@@ -291,7 +291,7 @@ class ServerlessAmplifyPlugin {
                 }
             };
 
-            if (typeof identityPool.metadata.SupportedLoginProviders == 'object') {
+            if (identityPool.metadata.SupportedLoginProviders !== null && typeof identityPool.metadata.SupportedLoginProviders == 'object') {
                 const providers = identityPool.metadata.SupportedLoginProviders;
 
                 // Each authentication provider that is supported for federation  has an entry in
@@ -407,7 +407,7 @@ class ServerlessAmplifyPlugin {
             }
             config.aws_cognito_identity_pool_id = identityPool.PhysicalResourceId;
 
-            if (typeof identityPool.metadata.SupportedLoginProviders == 'object') {
+            if (identityPool.metadata.SupportedLoginProviders !== null && typeof identityPool.metadata.SupportedLoginProviders == 'object') {
                 const providers = identityPool.metadata.SupportedLoginProviders;
                 const federated = {};
                 let hasFederated = false;
@@ -606,7 +606,7 @@ class ServerlessAmplifyPlugin {
     }
 
     /**
-     * Checks for and returns a manually defined AppClient configuration
+     * Checks for and returns a manually defined AppClient cofiguration
      * 
      * If the appClient information is defined in a different stack,
      * we need to be able to define the UserPoolId and ClientId
@@ -636,9 +636,9 @@ class ServerlessAmplifyPlugin {
     }
 
     /**
-     * Checks for and returns a manually defined identityPool configuration
+     * Checks for and returns a manually defined IdentityPool cofiguration
      * 
-     * If the identityPool information is defined in a different stack,
+     * If the IdentityPool information is defined in a different stack,
      * we need to be able to define the IdentityPoolId manually, 
      * using available cross stack variable references.
      * 
@@ -650,7 +650,13 @@ class ServerlessAmplifyPlugin {
         try {
             if (fileDetails.identityPool) {
                 identityPool = {
-                    PhysicalResourceId: fileDetails.identityPool
+                    PhysicalResourceId: fileDetails.identityPool,
+                    metadata: {
+                        // This is not yet supported for manual
+                        // specification of identityPool config.
+                        // Please add.
+                        SupportedLoginProviders: null
+                    }
                 };
             }
         } catch (e) {
