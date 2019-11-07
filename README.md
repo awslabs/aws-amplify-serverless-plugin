@@ -57,6 +57,8 @@ Each entry in the `amplify` section must consist of two parts, with two optional
 
 For the `appsync` type, the extension of the file is checked.  Supported formats include `flow`, `ts` (for TypeScript), `scala`, and `swift`.
 
+Cross stack `appClient` / `identityPool` configuration only supports `Amazon Cognito User Pools`. Other providers like Google are not tested or implemented yet.
+
 See the `example` directory for a complete sample of an AWS AppSync client deployment with Amazon Cognito user pools.
 
 ### Another Example
