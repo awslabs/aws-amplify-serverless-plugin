@@ -248,7 +248,14 @@ class ServerlessAmplifyPlugin {
         };
 
         if (fileDetails.hasOwnProperty('appClient')) {
-            const appClient = resources.find(r => r.ResourceType === 'AWS::Cognito::UserPoolClient' && r.LogicalResourceId === fileDetails.appClient);
+            // Look for manually defined appClient configuration
+            // when none is available in the resources because
+            // it is defined in a different stack.
+            let appClient = resources.find(
+                r => r.ResourceType === 'AWS::Cognito::UserPoolClient'
+                && r.LogicalResourceId === fileDetails.appClient
+            ) || this.getManuallyDefinedAppClientConfiguration(fileDetails);
+            
             if (typeof appClient !== 'undefined') {
                 config.CognitoUserPool = {
                     Default: {
@@ -271,7 +278,9 @@ class ServerlessAmplifyPlugin {
                 r.metadata.CognitoIdentityProviders.some(({ClientId}) => ClientId === config.CognitoUserPool.Default.AppClientId)
             )
             : undefined;
-        const identityPool = identityPoolForUserPool || identityPools[0];
+
+        const identityPool = identityPoolForUserPool || identityPools[0] || this.getManuallyDefinedIdentityPoolConfiguration(fileDetails);
+        
         if (typeof identityPool !== 'undefined') {
             config.CredentialsProvider = {
                 CognitoIdentity: {
@@ -282,7 +291,7 @@ class ServerlessAmplifyPlugin {
                 }
             };
 
-            if (typeof identityPool.metadata.SupportedLoginProviders == 'object') {
+            if (identityPool.metadata.SupportedLoginProviders !== null && typeof identityPool.metadata.SupportedLoginProviders == 'object') {
                 const providers = identityPool.metadata.SupportedLoginProviders;
 
                 // Each authentication provider that is supported for federation  has an entry in
@@ -362,7 +371,14 @@ class ServerlessAmplifyPlugin {
         config.aws_project_region = this.provider.getRegion();
 
         if (fileDetails.hasOwnProperty('appClient')) {
-            const appClient = resources.find(r => r.ResourceType === 'AWS::Cognito::UserPoolClient' && r.LogicalResourceId === fileDetails.appClient);
+            // Look for manually defined appClient configuration
+            // when none is available in the resources because
+            // it is defined in a different stack.
+            let appClient = resources.find(
+                r => r.ResourceType === 'AWS::Cognito::UserPoolClient'
+                && r.LogicalResourceId === fileDetails.appClient
+            ) || this.getManuallyDefinedAppClientConfiguration(fileDetails);
+            
             if (typeof appClient !== 'undefined') {
                 config.aws_cognito_region = appClient.metadata.UserPoolClient.UserPoolId.split('_')[0];
                 config.aws_user_pools_id = appClient.metadata.UserPoolClient.UserPoolId;
@@ -382,14 +398,16 @@ class ServerlessAmplifyPlugin {
                 r.metadata.CognitoIdentityProviders.some(({ClientId}) => ClientId === config.aws_user_pools_web_client_id)
             )
             : undefined;
-        const identityPool = identityPoolForUserPool || identityPools[0];
+
+        const identityPool = identityPoolForUserPool || identityPools[0] || this.getManuallyDefinedIdentityPoolConfiguration(fileDetails);
+
         if (typeof identityPool !== 'undefined') {
             if (!config.hasOwnProperty("aws_cognito_region")) {
                 config.aws_cognito_region = identityPool.PhysicalResourceId.split(':')[0];
             }
             config.aws_cognito_identity_pool_id = identityPool.PhysicalResourceId;
 
-            if (typeof identityPool.metadata.SupportedLoginProviders == 'object') {
+            if (identityPool.metadata.SupportedLoginProviders !== null && typeof identityPool.metadata.SupportedLoginProviders == 'object') {
                 const providers = identityPool.metadata.SupportedLoginProviders;
                 const federated = {};
                 let hasFederated = false;
@@ -585,6 +603,67 @@ class ServerlessAmplifyPlugin {
                 this.log('error', `Writing to ${filename}: ${err}`);
             }
         });
+    }
+
+    /**
+     * Checks for and returns a manually defined AppClient cofiguration
+     * 
+     * If the appClient information is defined in a different stack,
+     * we need to be able to define the UserPoolId and ClientId
+     * manually, using available cross stack variable references.
+     * 
+     * @param {FileDetails} fileDetails the file details
+     */
+    getManuallyDefinedAppClientConfiguration(fileDetails) {
+        let appClient;
+
+        try {
+            if (
+                fileDetails.appClient.UserPoolId 
+                && fileDetails.appClient.ClientId
+            ) {
+                appClient = {
+                    metadata: {
+                        UserPoolClient: fileDetails.appClient
+                    }
+                };
+            }
+        } catch (e) {
+            console.log('No manual appClient configuration available.');
+        }
+
+        return appClient;
+    }
+
+    /**
+     * Checks for and returns a manually defined IdentityPool cofiguration
+     * 
+     * If the IdentityPool information is defined in a different stack,
+     * we need to be able to define the IdentityPoolId manually, 
+     * using available cross stack variable references.
+     * 
+     * @param {FileDetails} fileDetails the file details
+     */
+    getManuallyDefinedIdentityPoolConfiguration(fileDetails) {
+        let identityPool;
+
+        try {
+            if (fileDetails.identityPool) {
+                identityPool = {
+                    PhysicalResourceId: fileDetails.identityPool,
+                    metadata: {
+                        // This is not yet supported for manual
+                        // specification of identityPool config.
+                        // Please add.
+                        SupportedLoginProviders: null
+                    }
+                };
+            }
+        } catch (e) {
+            console.log('No manual identityPool configuration available.');
+        }
+
+        return identityPool;
     }
 }
 

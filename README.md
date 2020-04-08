@@ -48,10 +48,16 @@ Each entry in the `amplify` section must consist of two parts, with two optional
     * `schema.json` (the AWS AppSync schema in JSON format),
     * `graphql` (a sample GraphQL operations file for codegen),
     * `appsync` (generated code for AppSync - the format is based on the extension)
-* `appClient` is the name of the Amazon Cognito user pool app client configured within the `resources` section of the `serverless.yml` file.  It is optional.
+* `appClient` is the name of the Amazon Cognito user pool app client configured within the `resources` section of the `serverless.yml` file. Define the individual properties for resources on a different stack. It is optional.
+  * `UserPoolId` (reference to a UserPool in another stack)
+  * `ClientId` (the ClientId of a UserPoolClient in another stack)
+  * `ClientSecret` (optional ClientSecret. **Must be entered manually.** CF doesn't support the export of this value.)
+* `identityPool` (optional reference to an IdentityPool in another stack)
 * `s3bucket` is the name of the S3 Bucket used for the S3 transfer utility.  It is optional.  If `disabled`, no S3 bucket information is written to the configuration file.  If not included, the first non-deployed S3 bucket will be used.
 
 For the `appsync` type, the extension of the file is checked.  Supported formats include `flow`, `ts` (for TypeScript), `scala`, and `swift`.
+
+Cross stack `appClient` / `identityPool` configuration only supports `Amazon Cognito User Pools`. Other providers like Google are not tested or implemented yet.
 
 See the `example` directory for a complete sample of an AWS AppSync client deployment with Amazon Cognito user pools.
 
