@@ -50,6 +50,7 @@ Each entry in the `amplify` section must consist of two parts, with two optional
     * `appsync` (generated code for AppSync - the format is based on the extension)
 * `appClient` is the name of the Amazon Cognito user pool app client configured within the `resources` section of the `serverless.yml` file.  It is optional.
 * `s3bucket` is the name of the S3 Bucket used for the S3 transfer utility.  It is optional.  If `disabled`, no S3 bucket information is written to the configuration file.  If not included, the first non-deployed S3 bucket will be used.
+* `maxDepth` is the maximum level that an object needs to expand when generating statements. This only applies to `appsync` and `graphql` types.
 
 For the `appsync` type, the extension of the file is checked.  Supported formats include `flow`, `ts` (for TypeScript), `scala`, and `swift`.
 

@@ -184,9 +184,9 @@ class ServerlessAmplifyPlugin {
      * @param {Resource} resource the GraphQL API Resource
      * @returns {String} path to the temporary file
      */
-    getTemporaryOperationsFile(resource, schemaFile) {
+    getTemporaryOperationsFile(resource, schemaFile, fileDetails) {
         const operationsFile = path.join('.serverless', 'amplify-operations.graphql');
-        graphqlGenerator(schemaFile, operationsFile, { language: 'graphql' });
+        graphqlGenerator(schemaFile, operationsFile, { language: 'graphql', maxDepth: fileDetails.maxDepth });
         return operationsFile;
     }
 
@@ -540,7 +540,7 @@ class ServerlessAmplifyPlugin {
         const resource = resources.find(r => r.ResourceType === 'AWS::AppSync::GraphQLApi');
         if (resource) {
             const schemaFile = this.getTemporarySchemaFile(resource);
-            graphqlGenerator(schemaFile, fileDetails.filename, { language: 'graphql' });
+            graphqlGenerator(schemaFile, fileDetails.filename, { language: 'graphql', maxDepth: fileDetails.maxDepth });
         } else {
             throw new Error(`No GraphQL API found - cannot write ${fileDetails.filename} file`);
         }
@@ -556,7 +556,7 @@ class ServerlessAmplifyPlugin {
         const resource = resources.find(r => r.ResourceType === 'AWS::AppSync::GraphQLApi');
         if (resource) {
             const schemaFile = path.resolve(this.getTemporarySchemaFile(resource));
-            const graphqlFile = path.resolve(this.getTemporaryOperationsFile(resource, schemaFile));
+            const graphqlFile = path.resolve(this.getTemporaryOperationsFile(resource, schemaFile, fileDetails));
             const fileType = path.extname(fileDetails.filename).substr(1);
             apiGenerator.generate(
                 [ graphqlFile ],        /* List of GraphQL Operations */
@@ -580,7 +580,7 @@ class ServerlessAmplifyPlugin {
      * @param {String} contents the contents of the file
      */
     writeConfigurationFile(filename, contents) {
-        fs.writeFile(filename, contents, 'utf8', (err, data) => {
+        fs.writeFileSync(filename, contents, 'utf8', (err, data) => {
             if (err) {
                 this.log('error', `Writing to ${filename}: ${err}`);
             }
