@@ -540,7 +540,15 @@ class ServerlessAmplifyPlugin {
         const resource = resources.find(r => r.ResourceType === 'AWS::AppSync::GraphQLApi');
         if (resource) {
             const schemaFile = this.getTemporarySchemaFile(resource);
-            graphqlGenerator(schemaFile, fileDetails.filename, { language: 'graphql' });
+            const fileType = path.extname(fileDetails.filename).substr(1);
+            const language = {
+              ts: 'typescript',
+              js: 'javascript',
+              swift: 'swift',
+              scala: 'scala',
+              graphql: 'graphql',
+            }[fileType];
+            graphqlGenerator(schemaFile, fileDetails.filename, { language });
         } else {
             throw new Error(`No GraphQL API found - cannot write ${fileDetails.filename} file`);
         }
